@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../widgets/products_grid.dart';
-import '../providers/products.dart';
+import '../widgets/badge.dart';
+import '../providers/cart.dart';
 
 enum FilterOptions {
   Favorites,
@@ -24,26 +25,37 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
         title: Text('My shop'),
         actions: [
           PopupMenuButton(
-              onSelected: (FilterOptions selectedValue) => {
-                    setState(() {
-                      if (selectedValue == FilterOptions.Favorites) {
-                        _showFavorites = true;
-                      } else {
-                        _showFavorites = false;
-                      }
-                    })
-                  },
-              itemBuilder: (_) => [
-                    PopupMenuItem(
-                      child: Text('Favorites'),
-                      value: FilterOptions.Favorites,
-                    ),
-                    PopupMenuItem(
-                      child: Text('Show all'),
-                      value: FilterOptions.All,
-                    ),
-                  ],
-              icon: Icon(Icons.more_vert))
+            onSelected: (FilterOptions selectedValue) => {
+              setState(() {
+                if (selectedValue == FilterOptions.Favorites) {
+                  _showFavorites = true;
+                } else {
+                  _showFavorites = false;
+                }
+              })
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                child: Text('Favorites'),
+                value: FilterOptions.Favorites,
+              ),
+              PopupMenuItem(
+                child: Text('Show all'),
+                value: FilterOptions.All,
+              ),
+            ],
+            icon: Icon(Icons.more_vert),
+          ),
+          Consumer<Cart>(
+            builder: (_, cartData, badgeChild) => Badge(
+              child: badgeChild,
+              value: cartData.itemCount.toString(),
+            ),
+            child: IconButton(
+              icon: Icon(Icons.shopping_cart),
+              onPressed: () {},
+            ),
+          ),
         ],
       ),
       body: ProductsGrid(_showFavorites),
