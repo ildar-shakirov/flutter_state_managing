@@ -4,13 +4,13 @@ import './product.dart';
 
 class ProductsProvider with ChangeNotifier {
   List<Product> _items = MOCKED_PRODUCT_LIST;
-  bool _showFavorites = false;
 
   List<Product> get items {
-    if (_showFavorites) {
-      return _items.where((item) => item.isFavorite).toList();
-    }
     return [..._items];
+  }
+
+  List<Product> get favoriteItems {
+    return _items.where((element) => element.isFavorite).toList();
   }
 
   void addProduct(value) {
@@ -20,15 +20,5 @@ class ProductsProvider with ChangeNotifier {
 
   Product findById(id) {
     return _items.firstWhere((item) => item.id == id);
-  }
-
-  void showFavoritesOnly() {
-    _showFavorites = true;
-    notifyListeners();
-  }
-
-  void showAll() {
-    _showFavorites = false;
-    notifyListeners();
   }
 }
