@@ -29,12 +29,20 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   void _updateImageUrl() {
     if (!_imageUrlFocus.hasFocus) {
+      if (_imageUrlController.text.isEmpty &&
+          !_imageUrlController.text.startsWith('http') &&
+          !_imageUrlController.text.startsWith('https')) {
+        return;
+      }
       setState(() {});
     }
   }
 
   void _saveForm() {
-    _form.currentState.save();
+    final isValid = _form.currentState.validate();
+    if (isValid) {
+      _form.currentState.save();
+    }
   }
 
   @override
@@ -86,6 +94,12 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     imageUrl: _editedProduct.imageUrl,
                   );
                 },
+                validator: (value) {
+                  if (value.isEmpty) {
+                    return 'Please provide a value';
+                  }
+                  return null;
+                },
               ),
               TextFormField(
                 decoration: InputDecoration(labelText: 'Price'),
@@ -104,6 +118,18 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     imageUrl: _editedProduct.imageUrl,
                   );
                 },
+                validator: (value) {
+                  if (value.isEmpty) {
+                    return 'Please enter a price';
+                  }
+                  if (double.tryParse(value) == null) {
+                    return 'Please provide a valid number';
+                  }
+                  if (double.parse(value) <= 0) {
+                    return 'Please a number greater than a zero';
+                  }
+                  return null;
+                },
               ),
               TextFormField(
                 decoration: InputDecoration(labelText: 'Description'),
@@ -119,6 +145,15 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     id: _editedProduct.id,
                     imageUrl: _editedProduct.imageUrl,
                   );
+                },
+                validator: (value) {
+                  if (value.isEmpty) {
+                    return 'Please enter a description';
+                  }
+                  if (value.length > 10) {
+                    return 'Should be at least 10 charachters long';
+                  }
+                  return null;
                 },
               ),
               Row(
@@ -155,6 +190,19 @@ class _EditProductScreenState extends State<EditProductScreen> {
                           id: _editedProduct.id,
                           imageUrl: _editedProduct.imageUrl,
                         );
+                      },
+                      validator: (value) {
+                        if (value.isEmpty) {
+                          return 'PLease enter an image URL';
+                        }
+                        var urlPattern =
+                            r"(https?|ftp)://([-A-Z0-9.]+)(/[-A-Z0-9+&@#/%=~_|!:,.;]*)?(\?[A-Z0-9+&@#/%=~_|!:‌​,.;]*)?";
+                        bool result = RegExp(urlPattern, caseSensitive: false)
+                            .hasMatch('https://www.google.com');
+                        if (result) {
+                          return 'Please enter a valid url';
+                        }
+                        return null;
                       },
                     ),
                   ),
