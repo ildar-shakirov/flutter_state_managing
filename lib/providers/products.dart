@@ -5,8 +5,11 @@ import 'package:http/http.dart' as http;
 import '../mocks/products.dart';
 import './product.dart';
 
+const API_URL = 'flutter-learning-36ca3-default-rtdb.firebaseio.com';
+final uri = Uri.https(API_URL, '/products.json');
+
 class ProductsProvider with ChangeNotifier {
-  List<Product> _items = MOCKED_PRODUCT_LIST;
+  List<Product> _items = [];
 
   List<Product> get items {
     return [..._items];
@@ -14,6 +17,29 @@ class ProductsProvider with ChangeNotifier {
 
   List<Product> get favoriteItems {
     return _items.where((element) => element.isFavorite).toList();
+  }
+
+  Future<void> fetchAndSetProducts() async {
+    try {
+      final response = await http.get(uri);
+      final extractedData = json.decode(response.body) as Map<String, dynamic>;
+      final List<Product> loadedProducts = [];
+      extractedData.forEach((prodId, prodData) {
+        loadedProducts.add(
+          Product(
+            id: prodId,
+            title: prodData['title'],
+            description: prodData['description'],
+            imageUrl: prodData['imageUrl'],
+            price: prodData['price'],
+          ),
+        );
+      });
+      _items = loadedProducts;
+      notifyListeners();
+    } catch (error) {
+      throw error;
+    }
   }
 
   Future addProduct(Product product) async {
