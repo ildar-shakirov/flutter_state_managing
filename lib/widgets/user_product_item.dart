@@ -14,6 +14,8 @@ class UserProduct extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final theme = Theme.of(context);
     return ListTile(
       title: Text(title),
       leading: CircleAvatar(
@@ -31,8 +33,8 @@ class UserProduct extends StatelessWidget {
               icon: Icon(Icons.edit, color: Theme.of(context).primaryColor),
             ),
             IconButton(
-              onPressed: () {
-                showDialog(
+              onPressed: () async {
+                final value = await showDialog(
                   context: context,
                   builder: (ctx) => AlertDialog(
                     title: Text('Are you shure?'),
@@ -52,12 +54,20 @@ class UserProduct extends StatelessWidget {
                       ),
                     ],
                   ),
-                ).then((value) {
-                  if (value) {
-                    Provider.of<ProductsProvider>(context, listen: false)
+                );
+                if (value) {
+                  try {
+                    await Provider.of<ProductsProvider>(context, listen: false)
                         .deleteProduct(id);
+                  } catch (error) {
+                    scaffoldMessenger.showSnackBar(
+                      SnackBar(
+                        content: Text(error.message),
+                        backgroundColor: theme.errorColor,
+                      ),
+                    );
                   }
-                });
+                }
               },
               icon: Icon(Icons.delete, color: Theme.of(context).errorColor),
             ),

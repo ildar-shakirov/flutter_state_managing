@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-import '../mocks/products.dart';
+import '../api/constants.dart';
+import '../models/http_exception.dart';
 import './product.dart';
 
-const API_URL = 'flutter-learning-36ca3-default-rtdb.firebaseio.com';
 final uri = Uri.https(API_URL, '/products.json');
 
 class ProductsProvider with ChangeNotifier {
@@ -23,6 +23,9 @@ class ProductsProvider with ChangeNotifier {
     try {
       final response = await http.get(uri);
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
+      if (extractedData == null) {
+        return;
+      }
       final List<Product> loadedProducts = [];
       extractedData.forEach((prodId, prodData) {
         loadedProducts.add(
@@ -55,7 +58,6 @@ class ProductsProvider with ChangeNotifier {
           'imageUrl': product.imageUrl,
           'description': product.description,
           'isFavorite': product.isFavorite,
-          'id': DateTime.now().toString(),
         }),
       );
 
@@ -74,19 +76,51 @@ class ProductsProvider with ChangeNotifier {
     }
   }
 
-  void updateProduct(String id, Product newProduct) {
+  Future updateProduct(String id, Product newProduct) async {
     final productIndex = _items.indexWhere((prod) => prod.id == id);
+    final updateProductUri = Uri.https(API_URL, '/products/$id.json');
     if (productIndex >= 0) {
-      _items[productIndex] = newProduct;
-      notifyListeners();
+      try {
+        final response = await http.patch(
+          updateProductUri,
+          body: json.encode({
+            'title': newProduct.title,
+            'price': newProduct.price,
+            'imageUrl': newProduct.imageUrl,
+            'description': newProduct.description,
+            'isFavorite': newProduct.isFavorite,
+          }),
+        );
+        if (response.statusCode != 200) {
+          throw Error();
+        }
+        _items[productIndex] = newProduct;
+        notifyListeners();
+      } catch (error) {
+        print(error);
+      }
     } else {
       print('....');
     }
   }
 
-  void deleteProduct(String id) {
-    _items.removeWhere((element) => element.id == id);
+  Future deleteProduct(String id) async {
+    final deleteProductUri = Uri.https(API_URL, '/products/$id');
+
+    final existingProductIndex =
+        _items.indexWhere((element) => element.id == id);
+    Product existingProduct = _items[existingProductIndex];
+
+    _items.removeAt(existingProductIndex);
     notifyListeners();
+
+    final response = await http.delete(deleteProductUri);
+    if (response.statusCode >= 400) {
+      _items.insert(existingProductIndex, existingProduct);
+      notifyListeners();
+      throw HttpException("Couln't delete product");
+    }
+    existingProduct = null;
   }
 
   Product findById(id) {

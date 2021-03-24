@@ -73,7 +73,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
     if (isValid) {
       _form.currentState.save();
       if (_editedProduct.id != null) {
-        Provider.of<ProductsProvider>(context, listen: false)
+        await Provider.of<ProductsProvider>(context, listen: false)
             .updateProduct(_editedProduct.id, _editedProduct);
         setState(() {
           _isLoading = false;
@@ -86,13 +86,12 @@ class _EditProductScreenState extends State<EditProductScreen> {
           await showDialog<Null>(
               context: context,
               builder: (ctx) => _errorDialogBuilder(ctx, error));
-        } finally {
-          setState(() {
-            _isLoading = false;
-          });
-          Navigator.of(context).pop();
         }
       }
+      setState(() {
+        _isLoading = false;
+      });
+      Navigator.of(context).pop();
     }
   }
 
