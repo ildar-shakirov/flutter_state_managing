@@ -6,8 +6,6 @@ import '../api/constants.dart';
 import '../models/http_exception.dart';
 import './product.dart';
 
-final uri = Uri.https(API_URL, '/products.json');
-
 class ProductsProvider with ChangeNotifier {
   List<Product> _items = [];
 
@@ -19,7 +17,17 @@ class ProductsProvider with ChangeNotifier {
     return _items.where((element) => element.isFavorite).toList();
   }
 
+  String _authToken;
+
+  void updateToken(String token) {
+    if (token != null) {
+      _authToken = token;
+      notifyListeners();
+    }
+  }
+
   Future<void> fetchAndSetProducts() async {
+    final uri = Uri.https(API_URL, '/products.json', {'auth': _authToken});
     try {
       final response = await http.get(uri);
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
@@ -46,8 +54,8 @@ class ProductsProvider with ChangeNotifier {
   }
 
   Future addProduct(Product product) async {
-    final url = Uri.https(
-        'flutter-learning-36ca3-default-rtdb.firebaseio.com', '/products.json');
+    final url = Uri.https('flutter-learning-36ca3-default-rtdb.firebaseio.com',
+        '/products.json', {'auth': _authToken});
 
     try {
       final response = await http.post(
@@ -78,7 +86,8 @@ class ProductsProvider with ChangeNotifier {
 
   Future updateProduct(String id, Product newProduct) async {
     final productIndex = _items.indexWhere((prod) => prod.id == id);
-    final updateProductUri = Uri.https(API_URL, '/products/$id.json');
+    final updateProductUri =
+        Uri.https(API_URL, '/products/$id.json', {'auth': _authToken});
     if (productIndex >= 0) {
       try {
         final response = await http.patch(
@@ -105,7 +114,8 @@ class ProductsProvider with ChangeNotifier {
   }
 
   Future deleteProduct(String id) async {
-    final deleteProductUri = Uri.https(API_URL, '/products/$id');
+    final deleteProductUri =
+        Uri.https(API_URL, '/products/$id', {'auth': _authToken});
 
     final existingProductIndex =
         _items.indexWhere((element) => element.id == id);

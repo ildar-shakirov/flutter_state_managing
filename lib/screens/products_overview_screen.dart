@@ -7,7 +7,6 @@ import '../widgets/badge.dart';
 import '../widgets/app_drawer.dart';
 import '../providers/cart.dart';
 import '../screens/cart_screen.dart';
-import '../providers/product.dart';
 
 enum FilterOptions {
   Favorites,
@@ -15,6 +14,7 @@ enum FilterOptions {
 }
 
 class ProductsOverviewScreen extends StatefulWidget {
+  static const routeName = '/products-overview';
   @override
   _ProductsOverviewScreenState createState() => _ProductsOverviewScreenState();
 }
@@ -38,10 +38,13 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
       setState(() {
         _isLoading = true;
       });
-      await Provider.of<ProductsProvider>(context).fetchAndSetProducts();
-      setState(() {
-        _isLoading = false;
-      });
+      try {
+        await Provider.of<ProductsProvider>(context).fetchAndSetProducts();
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
     _isInit = false;
     super.didChangeDependencies();

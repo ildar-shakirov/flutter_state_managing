@@ -14,7 +14,7 @@ class OrdersScreen extends StatefulWidget {
 }
 
 class _OrdersScreenState extends State<OrdersScreen> {
-  Future _ordersFuture = null;
+  Future _ordersFuture;
 
   @override
   void initState() {
