@@ -20,13 +20,24 @@ class OrderItem {
 
 class OrdersProvider with ChangeNotifier {
   List<OrderItem> _orders = [];
+  String _authToken;
+  String _userId;
+
+  void updateToken(String token, String userId) {
+    if (token != null) {
+      _authToken = token;
+      _userId = userId;
+      notifyListeners();
+    }
+  }
 
   List<OrderItem> get orders {
     return [..._orders];
   }
 
   Future<void> fetchAndSetOrders() async {
-    final uri = Uri.https(API_URL, '/orders.json');
+    final uri =
+        Uri.https(API_URL, '/orders/$_userId.json', {'auth': _authToken});
     final response = await http.get(uri);
     final List<OrderItem> loadedOrders = [];
     final extractedData = json.decode(response.body);
@@ -57,7 +68,8 @@ class OrdersProvider with ChangeNotifier {
   }
 
   Future addOrder(List<CartItem> cartProducts, double total) async {
-    final uri = Uri.https(API_URL, '/orders.json');
+    final uri =
+        Uri.https(API_URL, '/orders/$_userId.json', {'auth': _authToken});
     final timestamp = DateTime.now();
 
     try {

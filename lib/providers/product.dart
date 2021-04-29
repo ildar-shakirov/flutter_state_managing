@@ -10,23 +10,25 @@ class Product with ChangeNotifier {
   final String description;
   final double price;
   final String imageUrl;
-  bool isFavorite;
+  bool isFavorite = false;
 
-  Product(
-      {@required this.id,
-      @required this.title,
-      @required this.description,
-      @required this.price,
-      @required this.imageUrl,
-      this.isFavorite = false});
+  Product({
+    @required this.id,
+    @required this.title,
+    @required this.description,
+    @required this.price,
+    @required this.imageUrl,
+    this.isFavorite,
+  });
 
-  Future toggleStatus() async {
+  Future toggleStatus(String token, String userId) async {
     final oldStatus = isFavorite;
-    final uri = Uri.https(API_URL, '/products/$id.json');
+    final uri =
+        Uri.https(API_URL, '/userFavorites/$userId/$id.json', {'auth': token});
     isFavorite = !isFavorite;
     notifyListeners();
     try {
-      final response = await http.patch(
+      final response = await http.put(
         uri,
         body: json.encode({'isFavorite': isFavorite}),
       );

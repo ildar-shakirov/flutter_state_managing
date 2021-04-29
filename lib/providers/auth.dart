@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
@@ -27,6 +25,10 @@ class Auth with ChangeNotifier {
       return _token;
     }
     return null;
+  }
+
+  String get userId {
+    return _userId;
   }
 
   Future<void> _authenticate(String email, String password, String urn) async {

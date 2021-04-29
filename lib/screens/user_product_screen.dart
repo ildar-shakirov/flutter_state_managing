@@ -11,7 +11,7 @@ class UserProductsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final productsData = Provider.of<ProductsProvider>(context);
+    print('.......build');
 
     Future<void> _refreshProducts(BuildContext context) async {
       await Provider.of<ProductsProvider>(context, listen: false)
@@ -34,25 +34,33 @@ class UserProductsScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: () => _refreshProducts(context),
-        child: Padding(
-          padding: EdgeInsets.all(8),
-          child: ListView.builder(
-              itemCount: productsData.items.length,
-              itemBuilder: (_, i) {
-                return Column(
-                  children: [
-                    UserProduct(
-                      imageUrl: productsData.items[i].imageUrl,
-                      title: productsData.items[i].title,
-                      id: productsData.items[i].id,
+      body: FutureBuilder(
+        future: _refreshProducts(context),
+        builder: (ctx, snapshot) =>
+            snapshot.connectionState == ConnectionState.waiting
+                ? Center(child: CircularProgressIndicator())
+                : RefreshIndicator(
+                    onRefresh: () => _refreshProducts(context),
+                    child: Consumer<ProductsProvider>(
+                      builder: (ctx, productsData, _) => Padding(
+                        padding: EdgeInsets.all(8),
+                        child: ListView.builder(
+                            itemCount: productsData.items.length,
+                            itemBuilder: (_, i) {
+                              return Column(
+                                children: [
+                                  UserProduct(
+                                    imageUrl: productsData.items[i].imageUrl,
+                                    title: productsData.items[i].title,
+                                    id: productsData.items[i].id,
+                                  ),
+                                  Divider(),
+                                ],
+                              );
+                            }),
+                      ),
                     ),
-                    Divider(),
-                  ],
-                );
-              }),
-        ),
+                  ),
       ),
     );
   }

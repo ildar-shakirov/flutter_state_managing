@@ -18,31 +18,56 @@ class ProductsProvider with ChangeNotifier {
   }
 
   String _authToken;
+  String _userId;
 
-  void updateToken(String token) {
+  void updateToken(String token, String userId) {
     if (token != null) {
       _authToken = token;
+      _userId = userId;
       notifyListeners();
     }
   }
 
   Future<void> fetchAndSetProducts() async {
-    final uri = Uri.https(API_URL, '/products.json', {'auth': _authToken});
+    final productsUri = Uri.https(
+      API_URL,
+      '/products.json',
+      {
+        'auth': _authToken,
+        'orderBy': json.encode("creatorId"),
+        'equalTo': json.encode(_userId),
+      },
+    );
+    final favoritesUri = Uri.https(
+        API_URL, '/userFavorites/$_userId.json', {'auth': _authToken});
     try {
-      final response = await http.get(uri);
-      final extractedData = json.decode(response.body) as Map<String, dynamic>;
-      if (extractedData == null) {
+      final favoritesResponse = await http.get(
+        favoritesUri,
+      );
+      final productsResponse = await http.get(productsUri);
+      final extractedFavorites =
+          json.decode(favoritesResponse.body) as Map<String, dynamic>;
+
+      final extractedProducts =
+          json.decode(productsResponse.body) as Map<String, dynamic>;
+
+      if (extractedProducts == null) {
         return;
       }
+
       final List<Product> loadedProducts = [];
-      extractedData.forEach((prodId, prodData) {
+      extractedProducts.forEach((prodId, prodData) {
         loadedProducts.add(
           Product(
             id: prodId,
             title: prodData['title'],
             description: prodData['description'],
             imageUrl: prodData['imageUrl'],
-            price: prodData['price'],
+            price: double.parse(prodData['price'].toString()),
+            isFavorite: extractedFavorites != null &&
+                    extractedFavorites.containsKey(prodId)
+                ? extractedFavorites[prodId]['isFavorite']
+                : false,
           ),
         );
       });
@@ -65,7 +90,7 @@ class ProductsProvider with ChangeNotifier {
           'price': product.price,
           'imageUrl': product.imageUrl,
           'description': product.description,
-          'isFavorite': product.isFavorite,
+          'creatorId': _userId,
         }),
       );
 
@@ -86,8 +111,10 @@ class ProductsProvider with ChangeNotifier {
 
   Future updateProduct(String id, Product newProduct) async {
     final productIndex = _items.indexWhere((prod) => prod.id == id);
-    final updateProductUri =
-        Uri.https(API_URL, '/products/$id.json', {'auth': _authToken});
+    final updateProductUri = Uri.https(
+      API_URL,
+      '/products/$id.json',
+    );
     if (productIndex >= 0) {
       try {
         final response = await http.patch(
